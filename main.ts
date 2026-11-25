@@ -18,6 +18,17 @@ function main(): void {
   if (MOTTO.includes("\n") || MOTTO.includes("\r")) {
     throw new Error("motto must be exactly one line");
   }
+  // Reject invisible control characters (other than the line breaks
+  // already checked above) so the sealed text is clean printable UTF-8.
+  for (const ch of MOTTO) {
+    const code = ch.codePointAt(0) as number;
+    if (code < 0x20 || code === 0x7f) {
+      throw new Error(`motto contains control character U+${code.toString(16).padStart(4, "0")}`);
+    }
+  }
+  if (MOTTO !== MOTTO.trim()) {
+    throw new Error("motto must not start or end with whitespace");
+  }
   const outDir = process.env.MAKEFUN_OUTPUT_DIR || "/output";
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, "entry.txt"), MOTTO + "\n", "utf8");
